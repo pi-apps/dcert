@@ -6,7 +6,16 @@ import Header from "./components/Header";
 import PiNetwork from "pi-backend";
 import { useEffect } from "react";
 import { FilePicker } from "./components/components/file-picker";
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import {
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from "@mui/material";
+import Tabs from "./components/TabComponent/Tabs";
 
 // DO NOT expose these values to public
 const apiKey =
@@ -18,7 +27,7 @@ const pi = new PiNetwork(apiKey, walletPrivateSeed);
 type MyPaymentMetadata = {};
 
 var txnIds: any[] = ["asdfakljdfklajskldfjdslk"];
-var initialCertificateList : any[] = [];
+var initialCertificateList: any[] = [];
 
 type AuthResult = {
   accessToken: string;
@@ -80,6 +89,7 @@ const axiosClient = axios.create({
   baseURL: `${backendURL}`,
   timeout: 20000,
   withCredentials: true,
+  headers: { "Access-Control-Allow-Origin": "*" },
 });
 const config = {
   headers: {
@@ -98,9 +108,12 @@ export default function Shop() {
   const [viewType, setViewType] = useState<string>("issuer");
   const [txn, setTxn] = useState(["0"]);
   const [certificates, setCertificates] = useState([...initialCertis]);
-  const [certificateList, setCertificateList] = useState([...initialCertificateList]);
+  const [certificateList, setCertificateList] = useState([
+    ...initialCertificateList,
+  ]);
   const [myUserId, setMyUserId] = useState("");
-
+  const [test, setTest] = useState("");
+  const [activeTab, setActiveTab] = useState("tab1");
 
   const signIn = async () => {
     const scopes = ["username", "payments"];
@@ -108,6 +121,7 @@ export default function Shop() {
       scopes,
       onIncompletePaymentFound
     );
+    setTest(authResult?.user.uid);
     signInUser(authResult);
     setUser(authResult.user);
   };
@@ -189,7 +203,9 @@ export default function Shop() {
 
   const onIncompletePaymentFound = (payment: PaymentDTO) => {
     console.log("onIncompletePaymentFound", payment);
+    const paymentId= payment.identifier;
     return axiosClient.post("/payments/incomplete", { payment });
+    // return axiosClient.post("/payments/cancelled_payment", { paymentId });
   };
 
   const onReadyForServerApproval = (paymentId: string) => {
@@ -220,10 +236,10 @@ export default function Shop() {
     const resp = axiosClient.post("/payments/validate", { transactionId });
   }
 
-  const updateCertificates=()=> {
+  const updateCertificates = () => {
     const resp = axiosClient.get("/payments/getCertificates");
     var certis: any[] = [];
-    
+
     resp.then((b) => {
       console.log(b);
       b.data?.forEach((a: any) => {
@@ -233,24 +249,29 @@ export default function Shop() {
         certis.push(a);
       });
       console.log("here" + certis[0]);
-      setCertificateList((certificateList) => [ ...certis]);
-      console.log(certificateList[0])
+      setCertificateList((certificateList) => [...certis]);
+      console.log(certificateList[0]);
     });
     return resp;
-  }
+  };
 
-  const getMyUserId=()=> {
+  const getMyUserId = () => {
     const resp = axiosClient.get("/payments/getUserId");
     resp.then((b) => {
-        setMyUserId(b.data.UserId)
-    })
-  }
+      setMyUserId(b.data.UserId);
+    });
+  };
 
-  // const A2UPayment = async () => {
-  //   console.log("A2UPayment");
-  //   const userUid = "66527e06-4d7e-43a2-80af-4927a1675387";
-  //   const resp = axiosClient.post("/payments/A2UTransaction");
-  // };
+  const A2UPayment = async () => {
+    console.log("test2");
+    const userUid = "66527e06-4d7e-43a2-80af-4927a1675387";
+    const resp = axiosClient.get("/user/test2");
+  };
+  const test1 = async () => {
+    console.log("test");
+    const userUid = "66527e06-4d7e-43a2-80af-4927a1675387";
+    const resp = axiosClient.get("/user/test");
+  };
 
   const onHashUrlChange = (url: string) => {
     console.log("inparent comp");
@@ -272,9 +293,9 @@ export default function Shop() {
   };
 
   const issuerView = (
-    <>
-      <div style={{ textAlign: "center", marginBottom: 8 }}>
-        <h1>Issuer Portal</h1>
+    <div style= {{backgroundColor:"#15202B"}}>
+      <div style={{ textAlign: "center", marginBottom: 8 , backgroundColor: "#15202B"}}>
+        <h1 style = {{color : "#FFFFFF"}}>Issuer Portal</h1>
       </div>
       <ProductCard
         name="Diploma Certificate"
@@ -287,7 +308,7 @@ export default function Shop() {
         id=""
         onIdChange={onIdChange}
         pictureURL="https://library.kissclipart.com/20180924/qsw/kissclipart-certificate-of-graduation-cartoon-clipart-diploma-9c6e4be89452125f.png"
-        pictureCaption="Degree"
+        pictureCaption=""
         onClickBuy={() =>
           orderProduct("create certificate", 0.25, {
             productId: "degree_certificate_1",
@@ -298,7 +319,7 @@ export default function Shop() {
         }
       />
       <ProductCard
-        name="IOS certification"
+        name="ISO certification"
         description="To provide ISO certification"
         price={0.5}
         hashUrl=""
@@ -307,8 +328,11 @@ export default function Shop() {
         onEmailChange={onEmailChange}
         id=""
         onIdChange={onIdChange}
-        pictureURL="https://thumbs.dreamstime.com/z/iso-certified-quality-standard-seal-golden-71863423.jpg"
-        pictureCaption="Picture by Sistak - https://www.flickr.com/photos/94801434@N00/5134246283, CC BY-SA 2.0"
+        // pictureURL="https://thumbs.dreamstime.com/z/iso-certified-quality-standard-seal-golden-71863423.jpg"
+        // pictureURL={require("../Resource/Degree-Certificate.png")}
+        pictureURL="https://img.freepik.com/free-vector/gradient-golden-luxury-certificate_52683-70557.jpg?w=2000&t=st=1677988179~exp=1677988779~hmac=ee1256841a41197ce81f948a8b52ca966dacbd72b859256364e31449a5f9ed2b"
+        
+        pictureCaption=""
         onClickBuy={() =>
           orderProduct("create certificate", 0.5, {
             productId: "degree_certificate_2",
@@ -319,15 +343,22 @@ export default function Shop() {
         }
       />
       <div style={{ textAlign: "center", marginBottom: 8 }}>
-        <button onClick={getMyUserId}>Get my User Id</button> 
-         <text>{myUserId}</text>
+        <button onClick={getMyUserId}>Get my User Id</button>
+        <text>{myUserId}</text>
       </div>
-      {/* <div style={{ textAlign: "center", marginBottom: 8 }}>
-        <button onClick={A2UPayment}>A2U Payment</button> 
-         <text>{myUserId}</text>
-      </div> */}
+      <div style={{ textAlign: "center", marginBottom: 8 }}>
+        <text>{test}</text>
+      </div>
+      <div style={{ textAlign: "center", marginBottom: 8 }}>
+        <button onClick={A2UPayment}>A2U Payment</button>
+        <text>{myUserId}</text>
+      </div>
+      <div style={{ textAlign: "center", marginBottom: 8 }}>
+        <button onClick={test1}>Test1</button>
+        <text>{myUserId}</text>
+      </div>
       {showModal && <SignIn onSignIn={signIn} onModalClose={onModalClose} />}
-    </>
+    </div>
   );
 
   const receiverView = (
@@ -336,47 +367,82 @@ export default function Shop() {
         <h1> Certificates received </h1>
       </div>
       <TableContainer component={Paper}>
-      <Table sx={{ minWidth: 650 }} aria-label="simple table">
-        <TableHead>
-          <TableRow>
-            <TableCell><h3>Created at</h3></TableCell>
-            <TableCell align="right"><h3>Certificate Id</h3></TableCell>
-            <TableCell align="right"><h3>Email</h3></TableCell>
-            <TableCell align="right"><h3>Awarded to</h3></TableCell>
-            <TableCell align="right"><h3>Payment Id</h3></TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {certificateList.map((certi) => (
-            <TableRow
-              key={certi.name}
-              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-            >
-              <TableCell component="th" scope="row">
-                {certi.created_at}
+        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+          <TableHead>
+            <TableRow>
+              <TableCell>
+                <h3>Created at</h3>
               </TableCell>
-              <TableCell align="right">{certi.product_id}</TableCell>
-              <TableCell align="right">{certi.email}</TableCell>
-              <TableCell align="right">{certi.user}</TableCell>
-              <TableCell align="right">{certi.paymentId}</TableCell>
+              <TableCell align="right">
+                <h3>Certificate Id</h3>
+              </TableCell>
+              <TableCell align="right">
+                <h3>Email</h3>
+              </TableCell>
+              <TableCell align="right">
+                <h3>Awarded to</h3>
+              </TableCell>
+              <TableCell align="right">
+                <h3>Payment Id</h3>
+              </TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          </TableHead>
+          <TableBody>
+            {certificateList.map((certi) => (
+              <TableRow
+                key={certi.name}
+                sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+              >
+                <TableCell component="th" scope="row">
+                  {certi.created_at}
+                </TableCell>
+                <TableCell align="right">{certi.product_id}</TableCell>
+                <TableCell align="right">{certi.email}</TableCell>
+                <TableCell align="right">{certi.user}</TableCell>
+                <TableCell align="right">{certi.paymentId}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </>
   );
 
   return (
     <>
+      
+      {/* <FilePicker uploadURL = {"https://dlptest.com/https-post/"} accept = {"*"}></FilePicker> */}
+      {/* {viewType == "issuer" ? issuerView : receiverView} */}
+      <div className="App">
       <Header
         user={user}
         onSignIn={signIn}
         onSignOut={signOut}
         switchView={SwtichView}
       />
-      {/* <FilePicker uploadURL = {"https://dlptest.com/https-post/"} accept = {"*"}></FilePicker> */}
-      {viewType == "issuer" ? issuerView : receiverView}
+        <Tabs 
+        activeTab = {activeTab} 
+        setActiveTabProp = {setActiveTab} 
+        certificateList={certificateList}  
+        myUserId={myUserId} 
+        getMyUserId={getMyUserId}
+        showModal={showModal}
+        orderProduct={orderProduct}
+        signIn={signIn}
+        onModalClose={onModalClose}
+        signOut={signOut}
+        onIncompletePaymentFound={onIncompletePaymentFound}
+        onReadyForServerApproval={onReadyForServerApproval}
+        onReadyForServerCompletion={onReadyForServerCompletion}
+        onCancel={onCancel}
+        onError={onError}
+        updateCertificates={updateCertificates}
+        user={user}
+        onSignIn={signIn}
+        onSignOut={signOut}
+        switchView={SwtichView}
+        />
+      </div>
     </>
   );
 }
