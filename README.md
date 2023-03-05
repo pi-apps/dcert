@@ -1,7 +1,6 @@
-# Pi Demo App
+# DCert dapp on Pi
 
-Pi Demo App is an example of how you can implement the various required flows in your app's code.
-It aims to show you how to use Pi Platform API on the backend side and Pi SDK on the frontend side of your app.
+DCert on Pi network is a decentralized application that allows users to send, store and manage their certificates securely on the blockchain. It operates on a network of nodes, ensuring the creation and verification process is transparent, efficient, and tamper-proof. Users can access their certificates anytime, anywhere, this is the new way to celebrate success in a timeless manner.
 
 
 It is composed of two major parts:
